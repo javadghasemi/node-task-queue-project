@@ -5,7 +5,7 @@ services:
     image: rabbitmq:3
     container_name: rabbitmq
     ports:
-      - "5672:5672"
+      - "5672:${RABBITMQ_PORT}"
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -18,11 +18,12 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-licence_market}
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
     ports:
-      - "5432:5432"
+      - "5432:${POSTGRES_PORT}"
     restart: unless-stopped
 
 volumes:
