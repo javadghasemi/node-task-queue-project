@@ -8,16 +8,28 @@ import morgan from 'morgan';
 import {routes} from "./routes.js";
 import {RabbitMQ} from "./Loaders/RabbitMQ.js";
 import {TasksChannel} from "./Channels/TasksChannel.js";
+import {Postgres} from "./Loaders/Postgres.js";
 
 class TaskQueue {
+  static #dbConnection;
   static #app = express();
   static #server;
 
   static async initialize() {
+    await this.initDatabase();
     this.startServer();
     this.injectMiddlewares();
     this.initRouter();
     // await this.initRabbitMQConnection();
+  }
+
+  static async initDatabase() {
+    try {
+      this.#dbConnection = Postgres.getConnection();
+      await this.#dbConnection.authenticate();
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   static startServer() {
@@ -43,6 +55,7 @@ class TaskQueue {
 
   static stopServer() {
     this.#server.close();
+    this.#dbConnection.close();
   }
 }
 
