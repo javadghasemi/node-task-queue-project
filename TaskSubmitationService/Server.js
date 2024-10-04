@@ -27,6 +27,7 @@ class TaskQueue {
     try {
       this.#dbConnection = Postgres.getConnection();
       await this.#dbConnection.authenticate();
+      await this.#dbConnection.sync();
     } catch (e) {
       console.log(e);
     }
