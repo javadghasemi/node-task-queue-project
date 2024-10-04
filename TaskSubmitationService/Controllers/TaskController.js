@@ -1,7 +1,19 @@
-export class TaskController {
-  getAll(req, res) {}
+import {TasksChannel} from "../Channels/TasksChannel.js";
 
-  create(req, res) {}
+export class TaskController {
+  #taskService;
+
+  constructor(taskService) {
+    this.#taskService = taskService;
+  }
+
+  async getAll(req, res) {
+    const result = this.#taskService.getAll();
+
+    return res.json(result);
+  }
+
+  async create(req, res) {}
 
   status(req, res) {}
 

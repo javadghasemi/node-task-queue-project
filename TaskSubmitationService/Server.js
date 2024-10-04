@@ -6,14 +6,18 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 
 import {routes} from "./routes.js";
+import {RabbitMQ} from "./Loaders/RabbitMQ.js";
+import {TasksChannel} from "./Channels/TasksChannel.js";
 
 class TaskQueue {
   static #app = express();
   static #server;
 
-  static initialize() {
+  static async initialize() {
     this.startServer();
     this.injectMiddlewares();
+    this.initRouter();
+    // await this.initRabbitMQConnection();
   }
 
   static startServer() {
@@ -32,9 +36,14 @@ class TaskQueue {
     this.#app.use(routes);
   }
 
+  static async initRabbitMQConnection() {
+    await RabbitMQ.connection();
+    await TasksChannel.createChannel();
+  }
+
   static stopServer() {
     this.#server.close();
   }
 }
 
-TaskQueue.initialize();
+await TaskQueue.initialize();
