@@ -6,8 +6,18 @@ import {
   RmqContext,
 } from '@nestjs/microservices';
 
+import { TaskWorkerService } from './task-worker.service';
+import { ProcessTaskRequestDto } from './dtos/process-task-request.dto';
+
 @Controller('task-worker')
 export class TaskWorkerController {
+  constructor(private readonly taskWorkerService: TaskWorkerService) {}
+
   @MessagePattern('process')
-  processTask(@Payload() data, @Ctx() context: RmqContext) {}
+  processTask(
+    @Payload() data: ProcessTaskRequestDto,
+    @Ctx() context: RmqContext,
+  ) {
+    return this.taskWorkerService.processTask(data, context);
+  }
 }
