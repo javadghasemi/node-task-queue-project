@@ -9,6 +9,7 @@ async function bootstrap() {
     options: {
       urls: ['amqp://rabbit:rabbit@localhost:5672'],
       queue: 'state_queue',
+      noAck: false,
       queueOptions: { durable: false },
     },
   });

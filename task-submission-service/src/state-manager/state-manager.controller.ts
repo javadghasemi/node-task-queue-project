@@ -7,6 +7,7 @@ import {
   RmqContext,
 } from '@nestjs/microservices';
 import { ChangeStateEventDto } from './dtos/change-state-event.dto';
+import { SetTaskResultEventDto } from './dtos/set-task-result-event.dto';
 
 @Controller('state-manager')
 export class StateManagerController {
@@ -18,5 +19,13 @@ export class StateManagerController {
     @Ctx() context: RmqContext,
   ) {
     return this.stateManagerService.changeState(data, context);
+  }
+
+  @MessagePattern('add_result')
+  public addResult(
+    @Payload() data: SetTaskResultEventDto,
+    @Ctx() context: RmqContext,
+  ) {
+    return this.stateManagerService.setResult(data, context);
   }
 }

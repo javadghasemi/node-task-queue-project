@@ -14,6 +14,7 @@ import { Task } from './entities/task';
         options: {
           urls: ['amqp://rabbit:rabbit@localhost:5672'],
           queue: 'task_queue',
+          noAck: true,
           queueOptions: {
             durable: false,
           },

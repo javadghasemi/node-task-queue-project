@@ -17,6 +17,11 @@ export class Task {
   @Column()
   data: string;
 
+  @Column({
+    nullable: true,
+  })
+  result: string;
+
   @Column({ default: false })
   submitted: boolean;
 }
