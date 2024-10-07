@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { ClusteringService } from './clustering.service';
 
 async function bootstrap() {
   const env = process.env;
@@ -22,4 +23,4 @@ async function bootstrap() {
   await app.listen();
 }
 
-bootstrap();
+ClusteringService.clusterize(bootstrap);
