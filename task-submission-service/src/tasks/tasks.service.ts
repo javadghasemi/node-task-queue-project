@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +9,8 @@ import { v4 as uid } from 'uuid';
 import { TaskStatus } from './enums/TaskStatus';
 import { CreateTaskResponseDto } from './dtos/create-task-response.dto';
 import { lastValueFrom } from 'rxjs';
+import { TaskStatusResponseDto } from './dtos/task-status-response.dto';
+import { TaskResultResponseDto } from './dtos/task-result-response.dto';
 
 @Injectable()
 export class TasksService {
@@ -51,5 +53,27 @@ export class TasksService {
       TaskStatus.Queued,
       'Task queued successfully',
     );
+  }
+
+  public async status(taskId: string): Promise<TaskStatusResponseDto> {
+    const task = await this.TaskRepository.findOneBy({ taskId: taskId });
+    if (!task) {
+      throw new NotFoundException('Task was not found');
+    }
+
+    return new TaskStatusResponseDto(task.taskId, task.status);
+  }
+
+  public async result(taskId: string): Promise<TaskResultResponseDto> {
+    const task = await this.TaskRepository.findOneBy({ taskId: taskId });
+    if (!task) {
+      throw new NotFoundException('Task was not found');
+    }
+
+    if (!task.result) {
+      throw new NotFoundException("Your isn't processed yet!");
+    }
+
+    return new TaskResultResponseDto(task.taskId, task.status, task.result);
   }
 }
