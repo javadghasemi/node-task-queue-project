@@ -5,6 +5,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from './entities/task';
 
+const env = process.env;
+
 @Module({
   imports: [
     ClientsModule.register([
@@ -12,7 +14,9 @@ import { Task } from './entities/task';
         name: 'TaskClient',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://rabbit:rabbit@localhost:5672'],
+          urls: [
+            `amqp://${env.RABBITMQ_USER}:${env.RABBITMQ_PASS}@${env.RABBITMQ_HOST}:${env.RABBITMQ_PORT}`,
+          ],
           queue: 'task_queue',
           noAck: true,
           queueOptions: {

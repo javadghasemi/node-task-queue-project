@@ -5,20 +5,6 @@
       <server id="b1365a9d-3516-4122-9178-4aa2c86e36c3">
         <ServerDto>
           <option name="connectionType" value="TCP" />
-          <option name="destinations">
-            <list>
-              <DestinationDto>
-                <option name="id" value="f94e9105-deb5-413b-8d2d-b3bfccdd3bbd" />
-                <option name="name" value="state_queue" />
-                <option name="type" value="QUEUE" />
-              </DestinationDto>
-              <DestinationDto>
-                <option name="id" value="ef182558-4be7-4628-a0c4-09dd08582777" />
-                <option name="name" value="task_queue" />
-                <option name="type" value="QUEUE" />
-              </DestinationDto>
-            </list>
-          </option>
           <option name="host" value="localhost" />
           <option name="ibmConfiguration">
             <IbmConfiguration>
