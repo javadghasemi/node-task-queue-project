@@ -12,10 +12,13 @@ import { TaskResultResponseDto } from './dtos/task-result-response.dto';
 
 import { Task } from './entities/task';
 import { TaskStatus } from './enums/TaskStatus';
+import { Logger } from 'winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class TasksService {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject('TaskClient') private readonly taskQueueClient: ClientProxy,
     @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
   ) {}
@@ -23,21 +26,42 @@ export class TasksService {
   public async create(
     createTaskDto: CreateTaskRequestDto,
   ): Promise<CreateTaskResponseDto> {
+    this.logger.info('Creating a new task', { createTaskDto });
+
     const taskData = this.serializeTaskData(createTaskDto.data);
-    const task = await this.createAndSaveTask(createTaskDto, taskData);
 
-    await this.emitTaskForProcessing(task);
-    await this.markTaskAsSubmitted(task.id);
+    try {
+      const task = await this.createAndSaveTask(createTaskDto, taskData);
+      await this.emitTaskForProcessing(task);
+      await this.markTaskAsSubmitted(task.taskId);
 
-    return new CreateTaskResponseDto(
-      task.taskId,
-      TaskStatus.Queued,
-      'Task queued successfully',
-    );
+      this.logger.info('Task created and submitted for processing', {
+        taskId: task.taskId,
+        status: task.status,
+      });
+
+      return new CreateTaskResponseDto(
+        task.taskId,
+        TaskStatus.Queued,
+        'Task queued successfully',
+      );
+    } catch (error) {
+      this.logger.error('Error occurred while creating task', {
+        error: error.message,
+      });
+      throw error;
+    }
   }
 
   public async status(taskId: string): Promise<TaskStatusResponseDto> {
+    this.logger.debug('Fetching status for task', { taskId });
+
     const task = await this.findTaskOrThrow(taskId);
+
+    this.logger.info('Task status fetched successfully', {
+      taskId: task.taskId,
+      status: task.status,
+    });
 
     return new TaskStatusResponseDto(
       task.taskId,
@@ -48,11 +72,16 @@ export class TasksService {
   }
 
   public async result(taskId: string): Promise<TaskResultResponseDto> {
+    this.logger.debug('Fetching result for task', { taskId });
+
     const task = await this.findTaskOrThrow(taskId);
 
     if (!task.result) {
+      this.logger.error('Result not found for task', { taskId });
       throw new NotFoundException("Task isn't processed yet!");
     }
+
+    this.logger.info('Task result fetched successfully', { taskId });
 
     return new TaskResultResponseDto(
       task.taskId,
@@ -64,23 +93,35 @@ export class TasksService {
   }
 
   public async updateStatus(taskId: string, status: TaskStatus): Promise<void> {
-    await this.findTaskOrThrow(taskId);
+    this.logger.debug('Updating status for task', { taskId, status });
 
+    await this.findTaskOrThrow(taskId);
     await this.taskRepository.update({ taskId }, { status });
+
+    this.logger.info('Task status updated', { taskId, status });
   }
 
   public async addResult(taskId: string, result: any): Promise<void> {
-    await this.findTaskOrThrow(taskId);
+    this.logger.debug('Adding result for task', { taskId, result });
 
+    await this.findTaskOrThrow(taskId);
     await this.taskRepository.update(
       { taskId },
       { status: TaskStatus.Completed, result },
     );
+
+    this.logger.info('Task result added', {
+      taskId,
+      status: TaskStatus.Completed,
+    });
   }
 
   private async findTaskOrThrow(taskId: string): Promise<Task> {
+    this.logger.debug('Looking up task', { taskId });
+
     const task = await this.taskRepository.findOneBy({ taskId });
     if (!task) {
+      this.logger.error('Task not found', { taskId });
       throw new NotFoundException('Task not found');
     }
     return task;
@@ -100,10 +141,15 @@ export class TasksService {
       status: TaskStatus.Queued,
       type: createTaskDto.type,
     });
+
+    this.logger.debug('Saving task to the database', { task });
+
     return this.taskRepository.save(task);
   }
 
   private async emitTaskForProcessing(task: Task): Promise<void> {
+    this.logger.debug('Emitting task for processing', { taskId: task.taskId });
+
     await lastValueFrom(
       this.taskQueueClient.emit('process', {
         taskId: task.taskId,
@@ -112,9 +158,15 @@ export class TasksService {
         status: task.status,
       }),
     );
+
+    this.logger.info('Task emitted for processing', { taskId: task.taskId });
   }
 
-  private async markTaskAsSubmitted(taskId: number): Promise<void> {
-    await this.taskRepository.update(taskId, { submitted: true });
+  private async markTaskAsSubmitted(taskId: string): Promise<void> {
+    this.logger.debug('Marking task as submitted', { taskId });
+
+    await this.taskRepository.update({ taskId }, { submitted: true });
+
+    this.logger.info('Task marked as submitted', { taskId });
   }
 }

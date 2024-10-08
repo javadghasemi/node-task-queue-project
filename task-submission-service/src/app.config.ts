@@ -1,25 +1,40 @@
 import { ConfigService } from '@nestjs/config';
-import { utilities as nestWinstonUtilities } from 'nest-winston';
 import * as winston from 'winston';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { Task } from './tasks/entities/task';
+import { WinstonModuleOptions } from 'nest-winston';
 
-export function createWinstonConfig() {
-  return {
+const environment = process.env.NODE_ENV || 'development';
+
+export function createWinstonConfig(): WinstonModuleOptions {
+  const productionFormat: WinstonModuleOptions = {
     transports: [
       new winston.transports.Console({
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.ms(),
-          nestWinstonUtilities.format.nestLike('task-submission-service', {
-            colors: true,
-            prettyPrint: true,
-            processId: true,
+          winston.format.errors({ stack: true }),
+          winston.format.json(),
+        ),
+      }),
+    ],
+  };
+
+  const developmentFormat: WinstonModuleOptions = {
+    transports: [
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          winston.format.printf(({ timestamp, level, message, ...meta }) => {
+            return `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
           }),
         ),
       }),
     ],
   };
+
+  return environment === 'development' ? developmentFormat : productionFormat;
 }
 
 export function createTypeOrmConfig(

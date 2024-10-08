@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { TasksModule } from './tasks/tasks.module';
@@ -7,6 +7,7 @@ import { StateManagerModule } from './state-manager/state-manager.module';
 import { join, resolve } from 'node:path';
 import { WinstonModule } from 'nest-winston';
 import { createTypeOrmConfig, createWinstonConfig } from './app.config';
+import { RequestLoggingMiddleware } from './request-logging/request-logging.middleware';
 
 @Module({
   imports: [
@@ -27,4 +28,8 @@ import { createTypeOrmConfig, createWinstonConfig } from './app.config';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+  }
+}
