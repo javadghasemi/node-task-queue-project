@@ -1,6 +1,22 @@
 version: '3.9'
 
 services:
+  task-submission-service:
+    build:
+      context: ./task-submission-service
+      dockerfile: Dockerfile
+    container_name: task-submission-service
+    environment:
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_PASS}
+
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
   rabbitmq:
     image: rabbitmq:3
     container_name: rabbitmq
