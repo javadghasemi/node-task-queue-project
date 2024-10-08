@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { TaskProcessEventDto } from '../dtos/task-process-event.dto';
 import { TaskType } from '../enums/tasks-type.enum';
