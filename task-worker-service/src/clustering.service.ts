@@ -4,7 +4,7 @@ import * as _cluster from 'node:cluster';
 import { Injectable, Logger } from '@nestjs/common';
 
 const cluster = _cluster as unknown as _cluster.Cluster;
-const clusterSize = parseInt(process.argv[2] || '1');
+const clusterSize = parseInt(process.env.CLUSTER_SIZE || '1');
 
 @Injectable()
 export class ClusteringService {

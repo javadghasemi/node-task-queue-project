@@ -5,7 +5,7 @@ export class ImageProcessingTask implements Task {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve(data);
-      }, 2000);
+      }, 10000);
     });
   }
 }
