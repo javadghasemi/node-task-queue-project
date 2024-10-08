@@ -1,4 +1,4 @@
-import { TaskType } from '../tasks/tasks-type.enum';
+import { TaskType } from '../enums/tasks-type.enum';
 
 export class ProcessTaskRequestDto {
   taskId: string;
