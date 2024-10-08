@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Task } from '../tasks/entities/task';
-import { Repository } from 'typeorm';
 import { ChangeStateEventDto } from './dtos/change-state-event.dto';
 import { RmqContext } from '@nestjs/microservices';
 import { SetTaskResultEventDto } from './dtos/set-task-result-event.dto';
+import { TasksService } from '../tasks/tasks.service';
 
 @Injectable()
 export class StateManagerService {
-  constructor(
-    @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
-  ) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   public async changeState(data: ChangeStateEventDto, context: RmqContext) {
     const channel = context.getChannelRef();
@@ -19,7 +15,7 @@ export class StateManagerService {
     const taskId = data.taskId;
     const status = data.status;
 
-    await this.taskRepository.update({ taskId }, { status });
+    await this.tasksService.updateStatus(taskId, status);
 
     channel.ack(originalMessage);
   }
@@ -30,10 +26,7 @@ export class StateManagerService {
 
     const taskId = data.taskId;
 
-    await this.taskRepository.update(
-      { taskId },
-      { status: 'completed', result: data.result },
-    );
+    await this.tasksService.addResult(taskId, data.result);
 
     channel.ack(originalMessage);
   }

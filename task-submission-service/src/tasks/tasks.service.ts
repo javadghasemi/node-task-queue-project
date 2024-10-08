@@ -16,7 +16,7 @@ import { TaskResultResponseDto } from './dtos/task-result-response.dto';
 export class TasksService {
   constructor(
     @Inject('TaskClient') private readonly TaskQueueClient: ClientProxy,
-    @InjectRepository(Task) private readonly TaskRepository: Repository<Task>,
+    @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
   ) {}
 
   public async create(
@@ -28,14 +28,14 @@ export class TasksService {
       taskData = JSON.stringify(taskData);
     }
 
-    const task = this.TaskRepository.create({
+    const task = this.taskRepository.create({
       taskId: uid(),
       data: taskData,
       status: TaskStatus.Queued,
       type: createTaskDto.type,
     });
 
-    await this.TaskRepository.save(task);
+    await this.taskRepository.save(task);
 
     await lastValueFrom(
       this.TaskQueueClient.emit('process', {
@@ -46,7 +46,7 @@ export class TasksService {
       }),
     );
 
-    await this.TaskRepository.update(task.id, { submitted: true });
+    await this.taskRepository.update(task.id, { submitted: true });
 
     return new CreateTaskResponseDto(
       task.taskId,
@@ -56,24 +56,64 @@ export class TasksService {
   }
 
   public async status(taskId: string): Promise<TaskStatusResponseDto> {
-    const task = await this.TaskRepository.findOneBy({ taskId: taskId });
-    if (!task) {
+    const task = await this.taskRepository.findOneBy({ taskId: taskId });
+    if (!this.isTaskExists(task)) {
       throw new NotFoundException('Task was not found');
     }
 
-    return new TaskStatusResponseDto(task.taskId, task.status);
+    return new TaskStatusResponseDto(
+      task.taskId,
+      task.status,
+      task.createdAt,
+      task.updatedAt,
+    );
   }
 
   public async result(taskId: string): Promise<TaskResultResponseDto> {
-    const task = await this.TaskRepository.findOneBy({ taskId: taskId });
-    if (!task) {
+    const task = await this.taskRepository.findOneBy({ taskId: taskId });
+    if (!this.isTaskExists(task)) {
       throw new NotFoundException('Task was not found');
     }
 
-    if (!task.result) {
+    if (!this.isTaskResultExists(task)) {
       throw new NotFoundException("Your isn't processed yet!");
     }
 
-    return new TaskResultResponseDto(task.taskId, task.status, task.result);
+    return new TaskResultResponseDto(
+      task.taskId,
+      task.status,
+      task.result,
+      task.createdAt,
+      task.updatedAt,
+    );
+  }
+
+  public async updateStatus(taskId: string, status: TaskStatus) {
+    const task = await this.taskRepository.findOneBy({ taskId: taskId });
+    if (!this.isTaskExists(task)) {
+      throw new NotFoundException('Task was not found');
+    }
+
+    await this.taskRepository.update({ taskId }, { status });
+  }
+
+  public async addResult(taskId: string, result: any) {
+    const task = await this.taskRepository.findOneBy({ taskId: taskId });
+    if (!this.isTaskExists(task)) {
+      throw new NotFoundException('Task was not found');
+    }
+
+    await this.taskRepository.update(
+      { taskId },
+      { status: 'completed', result },
+    );
+  }
+
+  private isTaskExists(task: Task): boolean {
+    return Boolean(task);
+  }
+
+  private isTaskResultExists(task: Task): boolean {
+    return !!task?.result;
   }
 }
