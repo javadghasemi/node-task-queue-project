@@ -3,6 +3,9 @@ import { ClientProxy, RmqContext } from '@nestjs/microservices';
 import { TaskType } from './enums/tasks-type.enum';
 import { TaskFactory } from './tasks/task-factory';
 import { lastValueFrom } from 'rxjs';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { TaskProcessResultDto } from './dtos/task-process-result.dto';
+import { TaskProcessEventDto } from './dtos/task-process-event.dto';
 
 @Injectable()
 export class TaskWorkerService {
@@ -10,6 +13,7 @@ export class TaskWorkerService {
 
   constructor(
     @Inject('STATE_QUEUE') private readonly stateQueueClient: ClientProxy,
+    private readonly processorEventEmitter: EventEmitter2,
   ) {}
 
   public async processTask(data: any, context: RmqContext): Promise<void> {
@@ -21,17 +25,41 @@ export class TaskWorkerService {
     await this.updateTaskState(taskId, 'in-process');
 
     const taskData = JSON.parse(taskDataString);
-    const task = this.createTaskInstance(type);
+    // const task = this.createTaskInstance(type);
+
+    this.processorEventEmitter.emit(
+      'task.execute',
+      new TaskProcessEventDto(taskId, type, taskData, channel, originalMessage),
+    );
+
+    // try {
+    //   const result = await task.execute(taskData);
+    //   await this.updateTaskResult(taskId, result, 'completed');
+    //   this.logTaskSuccess(taskId);
+    //   channel.ack(originalMessage);
+    // } catch (error) {
+    //   this.logTaskError(taskId, error);
+    //   await this.updateTaskResult(taskId, error, 'failed');
+    // }
+  }
+
+  @OnEvent('task.result')
+  public async handleTaskResult(event: TaskProcessResultDto): Promise<void> {
+    const { taskId, result, status, channel, originalMessage } = event;
 
     try {
-      const result = await task.execute(taskData);
-      await this.updateTaskResult(taskId, result, 'completed');
-      this.logTaskSuccess(taskId);
-      channel.ack(originalMessage);
+      await this.updateTaskResult(taskId, result, status);
+      this.logger.log(
+        `Task processed successfully - taskId: ${taskId}, status: ${status}`,
+      );
     } catch (error) {
-      this.logTaskError(taskId, error);
-      await this.updateTaskResult(taskId, error, 'failed');
+      this.logger.error(
+        `Failed to submit task result - taskId: ${taskId}, status: ${status}`,
+        error,
+      );
     }
+
+    channel.ack(originalMessage);
   }
 
   private logTaskReceived(taskId: string, status: string): void {
@@ -68,11 +96,5 @@ export class TaskWorkerService {
     await lastValueFrom(
       this.stateQueueClient.emit('add_result', { taskId, result, status }),
     );
-  }
-
-  private createTaskInstance(type: string): any {
-    const taskType: TaskType = TaskType[type as keyof typeof TaskType];
-    const taskFactory = new TaskFactory(taskType);
-    return taskFactory.generate();
   }
 }
