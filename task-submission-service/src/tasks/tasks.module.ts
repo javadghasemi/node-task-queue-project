@@ -4,24 +4,34 @@ import { TasksController } from './tasks.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from './entities/task';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 const env = process.env;
 
 @Module({
   imports: [
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'TaskClient',
-        transport: Transport.RMQ,
-        options: {
-          urls: [
-            `amqp://${env.RABBITMQ_USER}:${env.RABBITMQ_PASS}@${env.RABBITMQ_HOST}:${env.RABBITMQ_PORT}`,
-          ],
-          queue: 'task_queue',
-          noAck: true,
-          queueOptions: {
-            durable: false,
-          },
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => {
+          const user = configService.get<string>('RABBITMQ_USER');
+          const pass = configService.get<string>('RABBITMQ_PASS');
+          const host = configService.get<string>('RABBITMQ_HOST');
+          const port = configService.get<string>('RABBITMQ_PORT');
+
+          return {
+            transport: Transport.RMQ,
+            options: {
+              urls: [`amqp://${user}:${pass}@${host}:${port}`],
+              queue: 'task_queue',
+              noAck: true,
+              queueOptions: {
+                durable: false,
+              },
+            },
+          };
         },
       },
     ]),
