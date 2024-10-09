@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { WinstonModule } from 'nest-winston';
 import { createTypeOrmConfig, createWinstonConfig } from './app.config';
 import { RequestLoggingMiddleware } from './request-logging/request-logging.middleware';
+import { ClusteringService } from './clustering.service';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { RequestLoggingMiddleware } from './request-logging/request-logging.midd
     StateManagerModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [ClusteringService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
