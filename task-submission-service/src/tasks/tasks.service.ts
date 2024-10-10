@@ -9,7 +9,7 @@ import { TaskStatusResponseDto } from './dtos/task-status-response.dto';
 import { TaskResultResponseDto } from './dtos/task-result-response.dto';
 
 import { Task } from './entities/task';
-import { TaskStatus } from '../enums/TaskStatus';
+import { TaskStatusEnum } from '../enums/task-status.enum';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Outbox } from './entities/outbox';
@@ -36,7 +36,7 @@ export class TasksService {
       const task = this.taskRepository.create({
         taskId: uuid(),
         data: taskData,
-        status: TaskStatus.Pending,
+        status: TaskStatusEnum.Pending,
         type: createTaskDto.type,
       });
 
@@ -51,7 +51,7 @@ export class TasksService {
 
           const outbox = this.outboxRepository.create({
             taskId: task.taskId,
-            status: TaskStatus.Pending,
+            status: TaskStatusEnum.Pending,
           });
 
           await entityManager.save(Outbox, outbox);
@@ -66,7 +66,7 @@ export class TasksService {
 
       return new CreateTaskResponseDto(
         task.taskId,
-        TaskStatus.Queued,
+        TaskStatusEnum.Queued,
         'Task queued successfully',
       );
     } catch (error) {
@@ -116,7 +116,10 @@ export class TasksService {
     );
   }
 
-  public async updateStatus(taskId: string, status: TaskStatus): Promise<void> {
+  public async updateStatus(
+    taskId: string,
+    status: TaskStatusEnum,
+  ): Promise<void> {
     this.logger.debug('Updating status for task', { taskId, status });
 
     await this.findTaskOrThrow(taskId);
@@ -131,12 +134,12 @@ export class TasksService {
     await this.findTaskOrThrow(taskId);
     await this.taskRepository.update(
       { taskId },
-      { status: TaskStatus.Completed, result },
+      { status: TaskStatusEnum.Completed, result },
     );
 
     this.logger.info('Task result added', {
       taskId,
-      status: TaskStatus.Completed,
+      status: TaskStatusEnum.Completed,
     });
   }
 
@@ -162,7 +165,7 @@ export class TasksService {
     const task = this.taskRepository.create({
       taskId: uuid(),
       data: taskData,
-      status: TaskStatus.Queued,
+      status: TaskStatusEnum.Queued,
       type: createTaskDto.type,
     });
 

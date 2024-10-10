@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { TaskStatus } from '../../enums/TaskStatus';
+import { TaskStatusEnum } from '../../enums/task-status.enum';
 
 @Entity()
 export class Outbox {
@@ -9,6 +9,10 @@ export class Outbox {
   @Column()
   public taskId: string;
 
-  @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.Pending })
-  status: TaskStatus;
+  @Column({
+    type: 'enum',
+    enum: TaskStatusEnum,
+    default: TaskStatusEnum.Pending,
+  })
+  status: TaskStatusEnum;
 }

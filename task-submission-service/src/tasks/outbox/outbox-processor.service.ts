@@ -9,7 +9,7 @@ import * as crypto from 'crypto';
 
 import { Outbox } from '../entities/outbox';
 import { Task } from '../entities/task';
-import { TaskStatus } from '../../enums/TaskStatus';
+import { TaskStatusEnum } from '../../enums/task-status.enum';
 import { LockService } from '../lock.service';
 
 @Injectable()
@@ -30,7 +30,7 @@ export class OutboxProcessorService {
     const pendingOutboxQuery = `SELECT * FROM "outbox" WHERE "status" = $1 FOR UPDATE SKIP LOCKED LIMIT 10`;
     const pendingOutboxEntries = await this.outboxRepository.query(
       pendingOutboxQuery,
-      [TaskStatus.Pending],
+      [TaskStatusEnum.Pending],
     );
 
     if (!pendingOutboxEntries.length) return;
@@ -55,7 +55,7 @@ export class OutboxProcessorService {
     }
   }
 
-  public async updateOutboxStatus(taskId: string, status: TaskStatus) {
+  public async updateOutboxStatus(taskId: string, status: TaskStatusEnum) {
     await this.outboxRepository.update({ taskId }, { status });
   }
 
@@ -71,15 +71,15 @@ export class OutboxProcessorService {
           return;
         }
 
-        if (task.status === TaskStatus.Queued) {
+        if (task.status === TaskStatusEnum.Queued) {
           this.logger.warn(`Task ${task.taskId} is already queued.`);
           return;
         }
 
-        task.status = TaskStatus.Queued;
+        task.status = TaskStatusEnum.Queued;
         await entityManager.save(Task, task);
 
-        outbox.status = TaskStatus.Queued;
+        outbox.status = TaskStatusEnum.Queued;
         await entityManager.save(Outbox, outbox);
       },
     );
@@ -87,7 +87,7 @@ export class OutboxProcessorService {
     const recheckedTask = await this.taskRepository.findOne({
       where: { taskId: outbox.taskId },
     });
-    if (recheckedTask?.status === TaskStatus.Queued) {
+    if (recheckedTask?.status === TaskStatusEnum.Queued) {
       await this.emitTaskForProcessing(recheckedTask);
     }
   }

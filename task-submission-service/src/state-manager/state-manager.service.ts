@@ -4,7 +4,7 @@ import { RmqContext } from '@nestjs/microservices';
 import { SetTaskResultEventDto } from './dtos/set-task-result-event.dto';
 import { TasksService } from '../tasks/tasks.service';
 import { OutboxProcessorService } from '../tasks/outbox/outbox-processor.service';
-import { TaskStatus } from '../enums/TaskStatus';
+import { TaskStatusEnum } from '../enums/task-status.enum';
 
 @Injectable()
 export class StateManagerService {
@@ -18,7 +18,7 @@ export class StateManagerService {
     const originalMessage = context.getMessage();
 
     const taskId = data.taskId;
-    const status: TaskStatus = data.status;
+    const status: TaskStatusEnum = data.status;
 
     await this.outboxProcessorService.updateOutboxStatus(taskId, status);
     await this.tasksService.updateStatus(taskId, status);
