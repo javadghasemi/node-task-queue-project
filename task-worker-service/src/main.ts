@@ -16,7 +16,7 @@ async function bootstrap() {
         ],
         queue: 'task_queue',
         noAck: false,
-        queueOptions: { durable: false },
+        queueOptions: { durable: true },
       },
     },
   );

@@ -1,9 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import { lastValueFrom } from 'rxjs';
 
 import { CreateTaskRequestDto } from './dtos/create-task-request.dto';
 import { CreateTaskResponseDto } from './dtos/create-task-response.dto';
@@ -11,16 +9,20 @@ import { TaskStatusResponseDto } from './dtos/task-status-response.dto';
 import { TaskResultResponseDto } from './dtos/task-result-response.dto';
 
 import { Task } from './entities/task';
-import { TaskStatus } from './enums/TaskStatus';
+import { TaskStatusEnum } from '../enums/task-status.enum';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Outbox } from './entities/outbox';
 
 @Injectable()
 export class TasksService {
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    @Inject('TaskClient') private readonly taskQueueClient: ClientProxy,
-    @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Outbox)
+    private readonly outboxRepository: Repository<Outbox>,
   ) {}
 
   public async create(
@@ -31,18 +33,40 @@ export class TasksService {
     const taskData = this.serializeTaskData(createTaskDto.data);
 
     try {
-      const task = await this.createAndSaveTask(createTaskDto, taskData);
-      await this.emitTaskForProcessing(task);
-      await this.markTaskAsSubmitted(task.taskId);
-
-      this.logger.info('Task created and submitted for processing', {
-        taskId: task.taskId,
-        status: task.status,
+      const task = this.taskRepository.create({
+        taskId: uuid(),
+        data: taskData,
+        status: TaskStatusEnum.Pending,
+        type: createTaskDto.type,
       });
+
+      await this.taskRepository.manager.transaction(
+        async (entityManager: EntityManager) => {
+          await entityManager.save(Task, task);
+
+          this.logger.info('Task created and pending for outbox', {
+            taskId: task.taskId,
+            status: task.status,
+          });
+
+          const outbox = this.outboxRepository.create({
+            taskId: task.taskId,
+            status: TaskStatusEnum.Pending,
+          });
+
+          await entityManager.save(Outbox, outbox);
+
+          this.logger.info('Outbox created and wait for queue', {
+            taskId: task.taskId,
+            outboxId: outbox.id,
+            status: task.status,
+          });
+        },
+      );
 
       return new CreateTaskResponseDto(
         task.taskId,
-        TaskStatus.Queued,
+        TaskStatusEnum.Queued,
         'Task queued successfully',
       );
     } catch (error) {
@@ -92,7 +116,10 @@ export class TasksService {
     );
   }
 
-  public async updateStatus(taskId: string, status: TaskStatus): Promise<void> {
+  public async updateStatus(
+    taskId: string,
+    status: TaskStatusEnum,
+  ): Promise<void> {
     this.logger.debug('Updating status for task', { taskId, status });
 
     await this.findTaskOrThrow(taskId);
@@ -107,12 +134,12 @@ export class TasksService {
     await this.findTaskOrThrow(taskId);
     await this.taskRepository.update(
       { taskId },
-      { status: TaskStatus.Completed, result },
+      { status: TaskStatusEnum.Completed, result },
     );
 
     this.logger.info('Task result added', {
       taskId,
-      status: TaskStatus.Completed,
+      status: TaskStatusEnum.Completed,
     });
   }
 
@@ -138,35 +165,12 @@ export class TasksService {
     const task = this.taskRepository.create({
       taskId: uuid(),
       data: taskData,
-      status: TaskStatus.Queued,
+      status: TaskStatusEnum.Queued,
       type: createTaskDto.type,
     });
 
     this.logger.debug('Saving task to the database', { task });
 
     return this.taskRepository.save(task);
-  }
-
-  private async emitTaskForProcessing(task: Task): Promise<void> {
-    this.logger.debug('Emitting task for processing', { taskId: task.taskId });
-
-    await lastValueFrom(
-      this.taskQueueClient.emit('process', {
-        taskId: task.taskId,
-        data: task.data,
-        type: task.type,
-        status: task.status,
-      }),
-    );
-
-    this.logger.info('Task emitted for processing', { taskId: task.taskId });
-  }
-
-  private async markTaskAsSubmitted(taskId: string): Promise<void> {
-    this.logger.debug('Marking task as submitted', { taskId });
-
-    await this.taskRepository.update({ taskId }, { submitted: true });
-
-    this.logger.info('Task marked as submitted', { taskId });
   }
 }

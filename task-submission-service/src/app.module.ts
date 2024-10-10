@@ -9,6 +9,7 @@ import { WinstonModule } from 'nest-winston';
 import { createTypeOrmConfig, createWinstonConfig } from './app.config';
 import { RequestLoggingMiddleware } from './request-logging/request-logging.middleware';
 import { ClusteringService } from './clustering.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ClusteringService } from './clustering.service';
       envFilePath: resolve(join(__dirname, '..', '..', '.env')),
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -30,12 +30,18 @@
     <connection id="621e63c1-6bf2-429e-ba8f-6b2851df9d88" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="621e63c1-6bf2-429e-ba8f-6b2851df9d88" dataset="public.outbox" active-filter-id="1d7b8527-99e8-4481-9e6e-4d95bdb72dc4">
+      <filter id="1d7b8527-99e8-4481-9e6e-4d95bdb72dc4" name="Filter 1" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
     <filter-actions connection-id="621e63c1-6bf2-429e-ba8f-6b2851df9d88" dataset="public.Task" active-filter-id="e04fbfa6-b0fc-49bd-b420-fd79b5210602">
       <filter id="e04fbfa6-b0fc-49bd-b420-fd79b5210602" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>
     <filter-actions connection-id="621e63c1-6bf2-429e-ba8f-6b2851df9d88" dataset="public.task" active-filter-id="a18b2761-6be2-435d-a70b-d07f900762ac">
       <filter id="a18b2761-6be2-435d-a70b-d07f900762ac" name="Filter 1" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>
+  </component>
+  <component name="DBNavigator.Project.ExecutionManager">
+    <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -49,7 +55,7 @@
           <description value="" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="16.3" />
+          <database-version value="17.0" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />

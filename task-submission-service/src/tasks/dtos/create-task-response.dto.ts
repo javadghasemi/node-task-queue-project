@@ -1,11 +1,11 @@
-import { TaskStatus } from '../enums/TaskStatus';
+import { TaskStatusEnum } from '../../enums/task-status.enum';
 
 export class CreateTaskResponseDto {
   taskId: string;
   status: string;
   message: string;
 
-  constructor(taskId: string, status: TaskStatus, message: string) {
+  constructor(taskId: string, status: TaskStatusEnum, message: string) {
     this.taskId = taskId;
     this.status = status;
     this.message = message;
