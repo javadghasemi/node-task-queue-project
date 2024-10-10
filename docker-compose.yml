@@ -10,8 +10,8 @@ services:
       dockerfile: Dockerfile
     container_name: task-submission-service
     environment:
-      NODE_ENV: production
-      CLUSTER_SIZE: 1
+      NODE_ENV: ${NODE_ENV:-production}
+      CLUSTER_SIZE: ${CLUSTER_SIZE:-1}
 
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
@@ -39,8 +39,8 @@ services:
       dockerfile: Dockerfile
     container_name: task-worker-service
     environment:
-      NODE_ENV: production
-      CLUSTER_SIZE: 1
+      NODE_ENV: ${NODE_ENV:-production}
+      CLUSTER_SIZE: ${CLUSTER_SIZE:-1}
 
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
