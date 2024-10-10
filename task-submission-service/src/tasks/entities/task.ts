@@ -4,6 +4,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 
 @Entity()
@@ -28,12 +29,12 @@ export class Task {
   })
   result: string;
 
-  @Column({ default: false })
-  submitted: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @VersionColumn() // Add a version column for optimistic locking
+  version: number;
 }

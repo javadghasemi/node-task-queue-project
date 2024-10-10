@@ -1,8 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import * as winston from 'winston';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Task } from './tasks/entities/task';
+import * as winston from 'winston';
 import { WinstonModuleOptions } from 'nest-winston';
+import { Task } from './tasks/entities/task';
+import { Outbox } from './tasks/entities/outbox';
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -48,6 +49,6 @@ export function createTypeOrmConfig(
     password: configService.get<string>('POSTGRES_PASSWORD'),
     database: configService.get<string>('POSTGRES_DB'),
     synchronize: true,
-    entities: [Task],
+    entities: [Task, Outbox],
   };
 }

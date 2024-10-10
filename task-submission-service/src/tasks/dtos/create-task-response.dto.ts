@@ -1,4 +1,4 @@
-import { TaskStatus } from '../enums/TaskStatus';
+import { TaskStatus } from '../../enums/TaskStatus';
 
 export class CreateTaskResponseDto {
   taskId: string;

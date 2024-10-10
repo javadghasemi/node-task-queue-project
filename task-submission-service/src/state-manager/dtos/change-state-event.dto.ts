@@ -1,4 +1,4 @@
-import { TaskStatus } from '../../tasks/enums/TaskStatus';
+import { TaskStatus } from '../../enums/TaskStatus';
 
 export class ChangeStateEventDto {
   public readonly taskId: string;

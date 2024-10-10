@@ -12,6 +12,7 @@ import { createWinstonConfig } from './app.config';
     WinstonModule.forRoot(createWinstonConfig()),
     ConfigModule.forRoot({
       envFilePath: resolve(join(__dirname, '..', '..', '.env')),
+      isGlobal: true,
     }),
     TaskWorkerModule,
   ],

@@ -5,30 +5,47 @@ services:
     depends_on:
       - postgres
       - rabbitmq
-      - redis
     build:
       context: ./task-submission-service
       dockerfile: Dockerfile
     container_name: task-submission-service
     environment:
+      NODE_ENV: production
+      CLUSTER_SIZE: 1
+
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
 
-      POSTGRES_HOST: ${POSTGRES_HOST:-localhost}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-licence_market}
 
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-password}
-      REDIS_DB: ${REDIS_DB:-0}
     ports:
-      - "3000:${PORT}"
+      - "3000:${SUBMISSION_SERVICE_PORT}"
     restart: unless-stopped
+    networks:
+      - task-queue-project-network
+
+  task-worker-service:
+    depends_on:
+      - rabbitmq
+      - task-submission-service
+    build:
+      context: ./task-worker-service
+      dockerfile: Dockerfile
+    container_name: task-worker-service
+    environment:
+      NODE_ENV: production
+      CLUSTER_SIZE: 1
+
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
     networks:
       - task-queue-project-network
 
@@ -59,18 +76,6 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
-    networks:
-      - task-queue-project-network
-
-  redis:
-    image: redis:7
-    container_name: redis
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 1s
-      timeout: 3s
-      retries: 5
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"]
     networks:
       - task-queue-project-network
 

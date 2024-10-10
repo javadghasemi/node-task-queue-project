@@ -25,7 +25,7 @@ export class TaskWorkerService {
     this.logTaskReceived(taskId, status);
 
     try {
-      await this.updateTaskState(taskId, 'in-process');
+      await this.updateTaskState(taskId, 'IN_PROGRESS');
 
       const taskData = JSON.parse(taskDataString);
       this.logger.debug('Task data parsed', { taskId, type });

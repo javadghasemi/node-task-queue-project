@@ -5,7 +5,6 @@ const environment = process.env.NODE_ENV || 'development';
 
 export function createWinstonConfig(): WinstonModuleOptions {
   const productionFormat: WinstonModuleOptions = {
-    level: 'warn',
     transports: [
       new winston.transports.Console({
         format: winston.format.combine(
@@ -21,7 +20,6 @@ export function createWinstonConfig(): WinstonModuleOptions {
   const developmentFormat: WinstonModuleOptions = {
     transports: [
       new winston.transports.Console({
-        level: 'debug',
         format: winston.format.combine(
           winston.format.colorize(),
           winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
