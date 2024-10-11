@@ -35,6 +35,6 @@ export class Task {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @VersionColumn() // Add a version column for optimistic locking
+  @VersionColumn()
   version: number;
 }
