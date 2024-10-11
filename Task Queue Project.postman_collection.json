@@ -1,0 +1,95 @@
+{
+	"info": {
+		"_postman_id": "2744aba6-5195-430c-8729-00c2d0fefa46",
+		"name": "Task Queue Project",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11981875"
+	},
+	"item": [
+		{
+			"name": "Create Task",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"type\": \"ImageProcessing\",\r\n    \"data\": {\r\n        \"hello\": \"world\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}:{{PORT}}/api/v1/tasks",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"api",
+						"v1",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}:{{PORT}}/api/v1/tasks/:taskId/status",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"api",
+						"v1",
+						"tasks",
+						":taskId",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "taskId",
+							"value": "ff1c4f18-69c7-44d0-980f-805d78a84795"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task Result",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}:{{PORT}}/api/v1/tasks/:taskId/result",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"api",
+						"v1",
+						"tasks",
+						":taskId",
+						"result"
+					],
+					"variable": [
+						{
+							"key": "taskId",
+							"value": "ff1c4f18-69c7-44d0-980f-805d78a84795"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
