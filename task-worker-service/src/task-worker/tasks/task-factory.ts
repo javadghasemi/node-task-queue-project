@@ -9,6 +9,8 @@ export class TaskFactory {
     switch (this.taskType) {
       case TaskType.ImageProcessing:
         return new ImageProcessingTask();
+      default:
+        throw new Error('Invalid task type');
     }
   }
 }
